@@ -1205,7 +1205,7 @@
 
     <!-- Background music -->
     <audio id="bgMusic" src="https://assets.shaadipath.com/templates/template10/assets/music/Demo_music.mp3" loop
-        preload="auto" playsinline></audio>
+        autoplay preload="auto" playsinline></audio>
 
     <!-- Music toggle — fades in after champagne pop -->
     <button class="music-btn" id="musicBtn" type="button" aria-label="Mute music">
@@ -1512,6 +1512,9 @@
                 }
             }
 
+            // Initially ensure button is in PLAYING condition (waves icon, unmuted)
+            updateMusicBtnUi(true);
+
             function tryStartMusic() {
                 if (!bgMusic) return;
                 bgMusic.muted = false;
@@ -1521,9 +1524,9 @@
                         updateMusicBtnUi(true);
                         removeUserInteractionListeners();
                     }).catch(function () {
-                        // Browser autoplay policy blocked unprompted sound.
-                        // Music button is visible and waiting for user gesture (click/touch/scroll).
-                        updateMusicBtnUi(false);
+                        // Browser autoplay policy blocked unprompted sound before user gesture.
+                        // Keep UI in playing condition; audio starts with sound on first touch/scroll
+                        updateMusicBtnUi(true);
                     });
                 }
             }
@@ -1533,14 +1536,14 @@
 
             function handleFirstInteraction() {
                 if (interactionHandled) return;
-                if (!bgMusic || !bgMusic.paused) {
-                    interactionHandled = true;
-                    removeUserInteractionListeners();
-                    return;
-                }
                 interactionHandled = true;
                 removeUserInteractionListeners();
-                tryStartMusic();
+                if (bgMusic) {
+                    bgMusic.muted = false;
+                    bgMusic.play().then(function () {
+                        updateMusicBtnUi(true);
+                    }).catch(function () {});
+                }
             }
 
             function removeUserInteractionListeners() {
@@ -1559,16 +1562,14 @@
             if (musicBtn && bgMusic) {
                 musicBtn.addEventListener("click", function (e) {
                     e.stopImmediatePropagation();
-                    if (bgMusic.paused) {
+                    if (bgMusic.paused || bgMusic.muted) {
                         bgMusic.muted = false;
                         bgMusic.play().then(function () {
                             updateMusicBtnUi(true);
                             removeUserInteractionListeners();
                         }).catch(function () { });
-                    } else if (bgMusic.muted) {
-                        bgMusic.muted = false;
-                        updateMusicBtnUi(true);
                     } else {
+                        bgMusic.pause();
                         bgMusic.muted = true;
                         updateMusicBtnUi(false);
                     }
@@ -1577,20 +1578,20 @@
                 bgMusic.addEventListener("play", function () {
                     if (!bgMusic.muted) updateMusicBtnUi(true);
                 });
-                bgMusic.addEventListener("pause", function () {
-                    updateMusicBtnUi(false);
-                });
-                bgMusic.addEventListener("volumechange", function () {
-                    updateMusicBtnUi(!bgMusic.paused && !bgMusic.muted);
-                });
             }
+
+            // Start immediately
+            tryStartMusic();
 
             setTimeout(function () {
                 var nav = document.getElementById("navCluster");
                 if (nav) nav.classList.add("is-visible");
-                if (musicBtn) musicBtn.classList.add("is-visible");
+                if (musicBtn) {
+                    musicBtn.classList.add("is-visible");
+                    musicBtn.classList.remove("is-muted");
+                }
                 tryStartMusic();
-            }, 600);
+            }, 300);
 
             // 6. Frames of Forever — Lightbox Modal with Next/Prev
             (function () {
