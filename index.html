@@ -1206,6 +1206,17 @@
     <!-- Background music -->
     <audio id="bgMusic" src="https://assets.shaadipath.com/templates/template10/assets/music/Demo_music.mp3" loop
         autoplay preload="auto" playsinline></audio>
+    <script>
+        (function () {
+            var audio = document.getElementById("bgMusic");
+            if (audio) {
+                audio.muted = false;
+                audio.volume = 1.0;
+                var p = audio.play();
+                if (p && p.catch) p.catch(function () {});
+            }
+        })();
+    </script>
 
     <!-- Music toggle — fades in after champagne pop -->
     <button class="music-btn" id="musicBtn" type="button" aria-label="Mute music">
@@ -1499,6 +1510,16 @@
             // 5. Reveal navigation menu and music toggle + Auto Background Music Controller
             var bgMusic = document.getElementById("bgMusic");
             var musicBtn = document.getElementById("musicBtn");
+            var userIntentionallyPaused = false;
+
+            if (bgMusic) {
+                var nativePause = bgMusic.pause;
+                bgMusic.pause = function () {
+                    if (userIntentionallyPaused) {
+                        nativePause.call(bgMusic);
+                    }
+                };
+            }
 
             function updateMusicBtnUi(isPlaying) {
                 if (!musicBtn) return;
@@ -1512,38 +1533,36 @@
                 }
             }
 
-            // Initially ensure button is in PLAYING condition (waves icon, unmuted)
+            // Initially set button to PLAYING condition (waves icon, unmuted)
             updateMusicBtnUi(true);
 
             function tryStartMusic() {
-                if (!bgMusic) return;
+                if (!bgMusic || userIntentionallyPaused) return;
                 bgMusic.muted = false;
+                bgMusic.volume = 1.0;
                 var promise = bgMusic.play();
                 if (promise !== undefined) {
                     promise.then(function () {
                         updateMusicBtnUi(true);
                         removeUserInteractionListeners();
                     }).catch(function () {
-                        // Browser autoplay policy blocked unprompted sound before user gesture.
-                        // Keep UI in playing condition; audio starts with sound on first touch/scroll
                         updateMusicBtnUi(true);
                     });
                 }
             }
 
-            var gestureEvents = ["click", "touchstart", "touchend", "pointerdown", "scroll", "keydown", "wheel"];
+            var gestureEvents = [
+                "mousemove", "pointermove", "mouseover", "mouseenter", "wheel", "scroll",
+                "touchstart", "touchend", "pointerdown", "mousedown", "click", "keydown",
+                "focus", "pageshow", "load"
+            ];
             var interactionHandled = false;
 
             function handleFirstInteraction() {
-                if (interactionHandled) return;
+                if (interactionHandled || userIntentionallyPaused) return;
                 interactionHandled = true;
                 removeUserInteractionListeners();
-                if (bgMusic) {
-                    bgMusic.muted = false;
-                    bgMusic.play().then(function () {
-                        updateMusicBtnUi(true);
-                    }).catch(function () {});
-                }
+                tryStartMusic();
             }
 
             function removeUserInteractionListeners() {
@@ -1563,13 +1582,15 @@
                 musicBtn.addEventListener("click", function (e) {
                     e.stopImmediatePropagation();
                     if (bgMusic.paused || bgMusic.muted) {
+                        userIntentionallyPaused = false;
                         bgMusic.muted = false;
                         bgMusic.play().then(function () {
                             updateMusicBtnUi(true);
                             removeUserInteractionListeners();
                         }).catch(function () { });
                     } else {
-                        bgMusic.pause();
+                        userIntentionallyPaused = true;
+                        if (nativePause) nativePause.call(bgMusic);
                         bgMusic.muted = true;
                         updateMusicBtnUi(false);
                     }
@@ -1580,8 +1601,20 @@
                 });
             }
 
-            // Start immediately
+            // High-frequency probe on initial load to start sound in parallel immediately
+            var autoPlayProbe = setInterval(function () {
+                if (bgMusic && !bgMusic.paused && !bgMusic.muted) {
+                    clearInterval(autoPlayProbe);
+                    return;
+                }
+                tryStartMusic();
+            }, 120);
+            setTimeout(function () { clearInterval(autoPlayProbe); }, 5000);
+
+            // Execute immediately on DOM ready and window events
             tryStartMusic();
+            window.addEventListener("load", tryStartMusic, { once: true });
+            window.addEventListener("pageshow", tryStartMusic);
 
             setTimeout(function () {
                 var nav = document.getElementById("navCluster");
@@ -1591,7 +1624,7 @@
                     musicBtn.classList.remove("is-muted");
                 }
                 tryStartMusic();
-            }, 300);
+            }, 200);
 
             // 6. Frames of Forever — Lightbox Modal with Next/Prev
             (function () {
