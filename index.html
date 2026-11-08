@@ -27,7 +27,7 @@
         content="Preview this wedding invitation template. Create your own beautiful wedding website with ShaadiPath." />
     <meta name="twitter:image" content="https://shaadipath.com/images/og/og-template10.png" />
     <script type="application/json"
-        id="wedding-config">{"couple":{"bride":"Divya","groom":"Naresh","date":"2026-11-16","venue":"","whatsapp":"","hashtag":"#NareshWedsDivya"},"invite":{"blessing":"","brideFather":"Mr.& Mrs.K.Srinivas","brideMother":"","groomFather":"Mr.& Mrs.Ch.Narasimha Rao","groomMother":"","showGrandparents":false,"parentsOrder":"groom_first","brideGF":"","brideGM":"","groomGF":"","groomGM":""},"events":[{"id":"holy_matrimony","name":"Holy Matrimony","emoji":"\u26EA","icon":"https://assets.shaadipath.com/templates/template10/assets/Events/Wedding_Ceremony.webp","date":"2026-11-16","time":"","venue":"Officiated by Pastor Issac","desc":"The sacred ceremony where vows are exchanged and two hearts become one before God and all who love them.","mapsLink":""},{"id":"reception","name":"Reception","emoji":"\uD83C\uDF89","icon":"https://assets.shaadipath.com/templates/template10/assets/Events/After_Party.webp","date":"2026-11-18","time":"","venue":"","desc":"Join us for an evening of joy, blessings, and celebration as we begin this beautiful new chapter together.","mapsLink":""}],"story":{"show":true,"storyText":"","storyMode":"story","customHashtag":"","tags":[],"showHashtagAsNames":false},"gallery":{"show":true,"layout":"4","photos":["https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_1.webp","https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_2.webp","https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_3.webp","https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_4.webp"]},"thingsToKnow":[],"showThingsToKnow":false,"rsvp":{"mode":"whatsapp","heading":"Will you join us?","subtext":"We have saved a place for you — at our table, in our hearts, and before God. Come celebrate with us as we begin this beautiful new chapter together.","btnText":"Yes, I'll Be There","whatsapp":""},"music":{"enabled":false,"src":"","name":""},"calendarUrls":{"google":"https://calendar.google.com/calendar/render?action=TEMPLATE\u0026text=Naresh%20weds%20Divya\u0026dates=20261116/20261117","apple":"https://shaadipath.com/api/calendar?title=Naresh%20weds%20Divya\u0026date=20261116\u0026end=20261117"}}</script>
+        id="wedding-config">{"couple":{"bride":"Divya","groom":"Naresh","date":"2026-11-16","venue":"","whatsapp":"","hashtag":"#NareshWedsDivya"},"invite":{"blessing":"","brideFather":"Mr.& Mrs.K.Srinivas","brideMother":"","groomFather":"Mr.& Mrs.Ch.Narasimha Rao","groomMother":"","showGrandparents":false,"parentsOrder":"groom_first","brideGF":"","brideGM":"","groomGF":"","groomGM":""},"events":[{"id":"holy_matrimony","name":"Holy Matrimony","emoji":"\u26EA","icon":"https://assets.shaadipath.com/templates/template10/assets/Events/Wedding_Ceremony.webp","date":"2026-11-16","time":"","venue":"Officiated by Pastor Issac","desc":"The sacred ceremony where vows are exchanged and two hearts become one before God and all who love them.","mapsLink":""},{"id":"reception","name":"Reception","emoji":"\uD83C\uDF89","icon":"https://assets.shaadipath.com/templates/template10/assets/Events/After_Party.webp","date":"2026-11-18","time":"","venue":"","desc":"Join us for an evening of joy, blessings, and celebration as we begin this beautiful new chapter together.","mapsLink":""}],"story":{"show":true,"storyText":"","storyMode":"story","customHashtag":"","tags":[],"showHashtagAsNames":false},"gallery":{"show":true,"layout":"4","photos":["https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_1.webp","https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_2.webp","https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_3.webp","https://assets.shaadipath.com/templates/template10/assets/Demo/Demo_4.webp"]},"thingsToKnow":[],"showThingsToKnow":false,"rsvp":{"mode":"whatsapp","heading":"Will you join us?","subtext":"We have saved a place for you — at our table, in our hearts, and before God. Come celebrate with us as we begin this beautiful new chapter together.","btnText":"Yes, I'll Be There","whatsapp":""},"music":{"enabled":true,"src":"https://assets.shaadipath.com/templates/template10/assets/music/Demo_music.mp3","name":"Wedding Music"},"calendarUrls":{"google":"https://calendar.google.com/calendar/render?action=TEMPLATE\u0026text=Naresh%20weds%20Divya\u0026dates=20261116/20261117","apple":"https://shaadipath.com/api/calendar?title=Naresh%20weds%20Divya\u0026date=20261116\u0026end=20261117"}}</script>
     <script>window.__WEDDING_CONFIG__ = JSON.parse(document.getElementById('wedding-config').textContent);</script>
     <script>
     </script>
@@ -1203,9 +1203,9 @@
         </button>
     </div>
 
-    <!-- Background music (preloaded lazily; unlocked + played on cork pop) -->
+    <!-- Background music -->
     <audio id="bgMusic" src="https://assets.shaadipath.com/templates/template10/assets/music/Demo_music.mp3" loop
-        preload="none"></audio>
+        preload="auto" playsinline></audio>
 
     <!-- Music toggle — fades in after champagne pop -->
     <button class="music-btn" id="musicBtn" type="button" aria-label="Mute music">
@@ -1496,13 +1496,101 @@
                 }
             }, 1800);
 
-            // 5. Reveal navigation menu and music toggle
+            // 5. Reveal navigation menu and music toggle + Auto Background Music Controller
+            var bgMusic = document.getElementById("bgMusic");
+            var musicBtn = document.getElementById("musicBtn");
+
+            function updateMusicBtnUi(isPlaying) {
+                if (!musicBtn) return;
+                musicBtn.classList.add("is-visible");
+                if (isPlaying) {
+                    musicBtn.classList.remove("is-muted");
+                    musicBtn.setAttribute("aria-label", "Mute music");
+                } else {
+                    musicBtn.classList.add("is-muted");
+                    musicBtn.setAttribute("aria-label", "Unmute music");
+                }
+            }
+
+            function tryStartMusic() {
+                if (!bgMusic) return;
+                bgMusic.muted = false;
+                var promise = bgMusic.play();
+                if (promise !== undefined) {
+                    promise.then(function () {
+                        updateMusicBtnUi(true);
+                        removeUserInteractionListeners();
+                    }).catch(function () {
+                        // Browser autoplay policy blocked unprompted sound.
+                        // Music button is visible and waiting for user gesture (click/touch/scroll).
+                        updateMusicBtnUi(false);
+                    });
+                }
+            }
+
+            var gestureEvents = ["click", "touchstart", "touchend", "pointerdown", "scroll", "keydown", "wheel"];
+            var interactionHandled = false;
+
+            function handleFirstInteraction() {
+                if (interactionHandled) return;
+                if (!bgMusic || !bgMusic.paused) {
+                    interactionHandled = true;
+                    removeUserInteractionListeners();
+                    return;
+                }
+                interactionHandled = true;
+                removeUserInteractionListeners();
+                tryStartMusic();
+            }
+
+            function removeUserInteractionListeners() {
+                gestureEvents.forEach(function (evt) {
+                    window.removeEventListener(evt, handleFirstInteraction, true);
+                    document.removeEventListener(evt, handleFirstInteraction, true);
+                });
+            }
+
+            gestureEvents.forEach(function (evt) {
+                window.addEventListener(evt, handleFirstInteraction, { capture: true, passive: true });
+                document.addEventListener(evt, handleFirstInteraction, { capture: true, passive: true });
+            });
+
+            // Music button manual click toggle
+            if (musicBtn && bgMusic) {
+                musicBtn.addEventListener("click", function (e) {
+                    e.stopImmediatePropagation();
+                    if (bgMusic.paused) {
+                        bgMusic.muted = false;
+                        bgMusic.play().then(function () {
+                            updateMusicBtnUi(true);
+                            removeUserInteractionListeners();
+                        }).catch(function () { });
+                    } else if (bgMusic.muted) {
+                        bgMusic.muted = false;
+                        updateMusicBtnUi(true);
+                    } else {
+                        bgMusic.muted = true;
+                        updateMusicBtnUi(false);
+                    }
+                }, true);
+
+                bgMusic.addEventListener("play", function () {
+                    if (!bgMusic.muted) updateMusicBtnUi(true);
+                });
+                bgMusic.addEventListener("pause", function () {
+                    updateMusicBtnUi(false);
+                });
+                bgMusic.addEventListener("volumechange", function () {
+                    updateMusicBtnUi(!bgMusic.paused && !bgMusic.muted);
+                });
+            }
+
             setTimeout(function () {
                 var nav = document.getElementById("navCluster");
                 if (nav) nav.classList.add("is-visible");
-                var music = document.getElementById("musicBtn");
-                if (music) music.classList.add("is-visible");
-            }, 1600);
+                if (musicBtn) musicBtn.classList.add("is-visible");
+                tryStartMusic();
+            }, 600);
 
             // 6. Frames of Forever — Lightbox Modal with Next/Prev
             (function () {
