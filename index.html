@@ -37,32 +37,32 @@
             var groom = 'Naresh';
             var date = '16 November 2026';
             function updatePreloader() {
-                // Names in preloader
+                // Names in preloader (Groom first)
                 var n1 = document.querySelector('.pl-n1');
                 var n2 = document.querySelector('.pl-n2');
-                if (n1) n1.textContent = bride;
-                if (n2) n2.textContent = groom;
-                // Names in hero copy
-                var hb = document.querySelector('.hc-bride');
+                if (n1) n1.textContent = groom;
+                if (n2) n2.textContent = bride;
+                // Names in hero copy (Groom first)
                 var hg = document.querySelector('.hc-groom');
-                if (hb) hb.textContent = bride;
+                var hb = document.querySelector('.hc-bride');
                 if (hg) hg.textContent = groom;
+                if (hb) hb.textContent = bride;
                 var htBrideEl = document.querySelector('#htBride .ht-name-inner');
                 var htGroomEl = document.querySelector('#htGroom .ht-name-inner');
-                if (htBrideEl && bride) htBrideEl.textContent = bride;
                 if (htGroomEl && groom) htGroomEl.textContent = groom;
+                if (htBrideEl && bride) htBrideEl.textContent = bride;
                 var blInitials = document.querySelectorAll('.bl-initial');
                 if (blInitials.length >= 2 && bride && groom) {
-                    blInitials[0].textContent = bride.charAt(0).toUpperCase();
-                    blInitials[blInitials.length - 1].textContent = groom.charAt(0).toUpperCase();
+                    blInitials[0].textContent = groom.charAt(0).toUpperCase();
+                    blInitials[blInitials.length - 1].textContent = bride.charAt(0).toUpperCase();
                 }
                 var invN1 = document.getElementById('invName1');
                 var invN2 = document.getElementById('invName2');
-                if (invN1 && bride) invN1.textContent = bride;
-                if (invN2 && groom) invN2.textContent = groom;
+                if (invN1 && groom) invN1.textContent = groom;
+                if (invN2 && bride) invN2.textContent = bride;
                 var ftNms = document.querySelectorAll('.ft-name');
-                if (ftNms[0] && bride) ftNms[0].textContent = bride;
-                if (ftNms[1] && groom) ftNms[1].textContent = groom;
+                if (ftNms[0] && groom) ftNms[0].textContent = groom;
+                if (ftNms[1] && bride) ftNms[1].textContent = bride;
                 var htDateEl = document.getElementById('htDate');
                 if (htDateEl && date) {
                     var dp = date.split(' ');
@@ -822,8 +822,8 @@
                             <span class="st-div-line"></span>
                         </div>
 
-                        <!-- Closing signature -->
-                        <p class="st-signature" data-delay="6200">With love,<br>Divya &amp; Naresh</p>
+                        <!-- Closing signature (Groom first) -->
+                        <p class="st-signature" data-delay="6200">With love,<br>Naresh &amp; Divya</p>
 
                     </div><!-- /st-letter-body -->
                 </div><!-- /st-letter -->
@@ -1256,6 +1256,80 @@
             var t10Roles = document.querySelectorAll('.inv-parents .inv-parent-role');
             if (t10Roles.length >= 2) { t10Roles[0].textContent = 'Son of'; t10Roles[1].textContent = 'Daughter of'; }
         });
+
+        // Enforce Groom first (Naresh & Divya) across all sections
+        (function enforceGroomFirst() {
+            var groom = 'Naresh';
+            var bride = 'Divya';
+
+            function applyGroomFirst() {
+                // 1. Invitation card names (Groom weds Bride)
+                var inv1 = document.getElementById('invName1');
+                var inv2 = document.getElementById('invName2');
+                if (inv1 && inv1.textContent !== groom) inv1.textContent = groom;
+                if (inv2 && inv2.textContent !== bride) inv2.textContent = bride;
+
+                // 2. Story closing signature
+                var stSig = document.querySelector('.st-signature');
+                if (stSig) {
+                    var desiredSig = 'With love,<br>' + groom + ' &amp; ' + bride;
+                    if (stSig.innerHTML !== desiredSig) stSig.innerHTML = desiredSig;
+                }
+
+                // 3. Footer names (Groom & Bride)
+                var ftNames = document.querySelectorAll('.ft-name');
+                if (ftNames.length >= 2) {
+                    if (ftNames[0].textContent !== groom) ftNames[0].textContent = groom;
+                    if (ftNames[1].textContent !== bride) ftNames[1].textContent = bride;
+                }
+
+                // 4. Monogram initials (N & D)
+                var blInitials = document.querySelectorAll('.bl-initial');
+                if (blInitials.length >= 2) {
+                    var gInit = groom.charAt(0).toUpperCase();
+                    var bInit = bride.charAt(0).toUpperCase();
+                    if (blInitials[0].textContent !== gInit) blInitials[0].textContent = gInit;
+                    if (blInitials[blInitials.length - 1].textContent !== bInit) blInitials[blInitials.length - 1].textContent = bInit;
+                }
+
+                // 5. Hero aria-label & document title
+                var ht = document.getElementById('heroText');
+                if (ht) ht.setAttribute('aria-label', groom + ' and ' + bride + ', 16 November 2026');
+
+                var desiredTitle = groom + ' & ' + bride + ' — A Christian Wedding';
+                if (document.title !== desiredTitle && !document.title.startsWith(groom)) {
+                    document.title = desiredTitle;
+                }
+            }
+
+            applyGroomFirst();
+            document.addEventListener('DOMContentLoaded', applyGroomFirst);
+            window.addEventListener('load', applyGroomFirst);
+
+            [50, 150, 300, 600, 1200, 2000].forEach(function (d) {
+                setTimeout(applyGroomFirst, d);
+            });
+
+            if (window.MutationObserver) {
+                var observer = new MutationObserver(function () {
+                    applyGroomFirst();
+                });
+                document.addEventListener('DOMContentLoaded', function () {
+                    var targets = [
+                        document.getElementById('invName1'),
+                        document.getElementById('invName2'),
+                        document.querySelector('.st-signature'),
+                        document.querySelector('.ft-names'),
+                        document.querySelector('title')
+                    ];
+                    targets.forEach(function (target) {
+                        if (target) {
+                            observer.observe(target, { childList: true, characterData: true, subtree: true });
+                        }
+                    });
+                });
+            }
+        })();
     </script>
     <style>
         .sp-blessings {
